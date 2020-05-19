@@ -88,12 +88,12 @@ cmd_default() {
 		local should_check_existence
 		branch_count=$(git_local_branches | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
-			echo "No branches exist yet. Base branches must be created now."
+			echo "Não existem branchs criadas. Criando branchs base."
 			should_check_existence=NO
 			default_suggestion=$(git config --get gitflow.branch.master || echo master)
 		else
 			echo
-			echo "Which branch should be used for bringing forth production releases?"
+			echo "Qual branch deve ser utilizada para produção?"
 			git_local_branches | sed 's/^.*$/   - &/g'
 
 			should_check_existence=YES
@@ -107,12 +107,13 @@ cmd_default() {
 			done
 		fi
 		
-		printf "Branch name for production releases: [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
+		printf "Nome da branch de produção: [$default_suggestion] "
+		printf "\n"
+		# if noflag defaults; then
+			# read answer
+		# else
+			# printf "\n"
+		# fi
 		master_branch=${answer:-$default_suggestion}
 
 		# check existence in case of an already existing repo
@@ -134,7 +135,7 @@ cmd_default() {
 	# add a develop branch if no such branch exists yet
 	local develop_branch
 	if gitflow_has_develop_configured && ! flag force; then
-		develop_branch=$(git config --get gitflow.branch.develop)
+		develop_branch=$(git config --get gitflow.branch.desenvolvimento)
 	else
 		# Again, the same two cases as with the master selection are
 		# considered (fresh repo or repo that contains branches)
@@ -143,16 +144,16 @@ cmd_default() {
 		branch_count=$(git_local_branches | grep -v "^${master_branch}\$" | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
 			should_check_existence=NO
-			default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
+			default_suggestion=$(git config --get gitflow.branch.desenvolvimento || echo desenvolvimento)
 		else
 			echo
-			echo "Which branch should be used for integration of the \"next release\"?"
+			echo "Qual branch deve ser utilizada para desenvolvimento?"
 			git_local_branches | grep -v "^${master_branch}\$" | sed 's/^.*$/   - &/g'
 
 			should_check_existence=YES
 			default_suggestion=
-			for guess in $(git config --get gitflow.branch.develop) \
-			             'develop' 'int' 'integration' 'master'; do
+			for guess in $(git config --get gitflow.branch.desenvolvimento) \
+			             'desenvolvimento' 'int' 'integration' 'master'; do
 				if git_local_branch_exists "$guess" && [ "$guess" != "$master_branch" ]; then
 					default_suggestion="$guess"
 					break
@@ -161,17 +162,18 @@ cmd_default() {
 			
 			if [ -z $default_suggestion ]; then
 				should_check_existence=NO
-				default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
+				default_suggestion=$(git config --get gitflow.branch.desenvolvimento || echo desenvolvimento)
 			fi
 			
 		fi
 
-		printf "Branch name for \"next release\" development: [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
+		printf "Nome da branch de desenvolvimento: [$default_suggestion] "
+		printf "\n"
+		# if noflag defaults; then
+			# read answer
+		# else
+			# printf "\n"
+		# fi
 		develop_branch=${answer:-$default_suggestion}
 
 		if [ "$master_branch" = "$develop_branch" ]; then
@@ -185,7 +187,69 @@ cmd_default() {
 		fi
 
 		# store the name of the develop branch
-		git_do config gitflow.branch.develop "$develop_branch"
+		git_do config gitflow.branch.desenvolvimento "$develop_branch"
+	fi
+	
+	# add a homologacao branch if no such branch exists yet
+	local homolog_branch
+	if gitflow_has_homolog_configured && ! flag force; then
+		homolog_branch=$(git config --get gitflow.branch.homologacao)
+	else
+		# Again, the same two cases as with the master selection are
+		# considered (fresh repo or repo that contains branches)
+		local default_suggestion
+		local should_check_existence
+		branch_count=$(git_local_branches | grep -v "^${master_branch}\$" | wc -l)
+		if [ "$branch_count" -eq 0 ]; then
+			should_check_existence=NO
+			default_suggestion=$(git config --get gitflow.branch.homologacao || echo homologacao)
+		else
+			echo
+			echo "Qual branch deve ser utilizada para homologação?"
+			git_local_branches | grep -v "^${master_branch}\$" | sed 's/^.*$/   - &/g'
+
+			should_check_existence=YES
+			default_suggestion=
+			for guess in $(git config --get gitflow.branch.homologacao) \
+			             'homologacao' 'desenvolvimento' 'int' 'integration' 'master'; do
+				if git_local_branch_exists "$guess" && [ "$guess" != "$master_branch" ]; then
+					default_suggestion="$guess"
+					break
+				fi
+			done
+			
+			if [ -z $default_suggestion ]; then
+				should_check_existence=NO
+				default_suggestion=$(git config --get gitflow.branch.homologacao || echo homologacao)
+			fi
+			
+		fi
+
+		printf "Nome da branch de homologacao: [$default_suggestion] "
+		printf "\n"
+		# if noflag defaults; then
+			# read answer
+		# else
+			# printf "\n"
+		# fi
+		homolog_branch=${answer:-$default_suggestion}
+
+		if [ "$master_branch" = "$homolog_branch" ]; then
+			die "Production and integration branches should differ."
+		fi
+
+		if [ "$develop_branch" = "$homolog_branch" ]; then
+			die "Homolog and desenvolvimento branches should differ."
+		fi
+
+		# check existence in case of an already existing repo
+		if [ "$should_check_existence" = "YES" ]; then
+			git_local_branch_exists "$homolog_branch" || \
+				die "Local branch '$homolog_branch' does not exist."
+		fi
+
+		# store the name of the develop branch
+		git_do config gitflow.branch.homologacao "$homolog_branch"
 	fi
 
 	# Creation of HEAD
@@ -219,6 +283,19 @@ cmd_default() {
 		fi
 		created_gitflow_branch=1
 	fi
+	
+	#Creation of homolog_branch
+	# -------------------------
+	
+	if ! git_local_branch_exists "$homolog_branch"; then
+		if git_remote_branch_exists "origin/$homolog_branch"; then
+			git_do branch "$homolog_branch" "origin/$homolog_branch" >/dev/null 2>&1
+		else
+			git_do branch --no-track "$homolog_branch" "$master_branch"
+		fi
+		created_gitflow_branch=2
+	fi
+	
 
 	# assert the gitflow repo has been correctly initialized
 	gitflow_is_initialized
@@ -226,6 +303,12 @@ cmd_default() {
 	# switch to develop branch if its newly created
 	if [ $created_gitflow_branch -eq 1 ]; then
 		git_do checkout -q "$develop_branch"
+	fi
+	
+	
+	# switch to develop branch if its newly created
+	if [ $created_gitflow_branch -eq 2 ]; then
+		git_do checkout -q "$homolog_branch"
 	fi
 
 	# finally, ask the user for naming conventions (branch and tag prefixes)

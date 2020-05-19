@@ -50,17 +50,15 @@ fi
 export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
 
 usage() {
-	echo "usage: git flow <subcommand>"
+	echo "Usar: git flow <subcommand>"
 	echo
-	echo "Available subcommands are:"
-	echo "   init      Initialize a new git repo with support for the branching model."
-	echo "   feature   Manage your feature branches."
-	echo "   release   Manage your release branches."
-	echo "   hotfix    Manage your hotfix branches."
-	echo "   support   Manage your support branches."
-	echo "   version   Shows version information."
+	echo "Comandos disponiveis:"
+	echo "   init      Inicializa um novo repositorio baseado no modelo de branchs da FITCARD."
+	echo "   feature   Gerencie as Branchs de features."
+	echo "   hotfix    Gerencie as Branchs de hotfix."
+	echo "   version   Exibe informações da versão."
 	echo
-	echo "Try 'git flow <subcommand> help' for details."
+	echo "Exeute 'git flow <subcommand> help' para maiores detalhes."
 }
 
 main() {

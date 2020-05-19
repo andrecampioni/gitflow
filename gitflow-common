@@ -171,8 +171,13 @@ gitflow_has_master_configured() {
 }
 
 gitflow_has_develop_configured() {
-	local develop=$(git config --get gitflow.branch.develop)
-	[ "$develop" != "" ] && git_local_branch_exists "$develop"
+	local develop=$(git config --get gitflow.branch.desenvolvimento)
+	[ "$develop" != "" ] && git_local_branch_exists "$desenvolvimento"
+}
+
+gitflow_has_homolog_configured() {
+	local homologacao=$(git config --get gitflow.branch.homologacao)
+	[ "$homologacao" != "" ] && git_local_branch_exists "$homologacao"
 }
 
 gitflow_has_prefixes_configured() {
@@ -187,7 +192,11 @@ gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
 	[ "$(git config --get gitflow.branch.master)" !=    \
-	  "$(git config --get gitflow.branch.develop)" ] && \
+	  "$(git config --get gitflow.branch.desenvolvimento)" ] && \
+	[ "$(git config --get gitflow.branch.homologacao)" !=    \
+	  "$(git config --get gitflow.branch.desenvolvimento)" ] && \
+	[ "$(git config --get gitflow.branch.homologacao)" !=    \
+	  "$(git config --get gitflow.branch.master)" ] && \
 	gitflow_has_prefixes_configured
 }
 
@@ -195,7 +204,8 @@ gitflow_is_initialized() {
 gitflow_load_settings() {
 	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
-	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
+	export DEVELOP_BRANCH=$(git config --get gitflow.branch.desenvolvimento)
+	export HOMOLOG_BRANCH=$(git config --get gitflow.branch.homologacao)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
 }
 
@@ -223,6 +233,7 @@ gitflow_resolve_nameprefix() {
 
 	# first, check if there is a perfect match
 	if git_local_branch_exists "$prefix$name"; then
+		echo "$name"
 		echo "$name"
 		return 0
 	fi
