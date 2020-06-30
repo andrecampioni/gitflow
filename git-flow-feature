@@ -47,11 +47,6 @@ usage() {
 	echo "usage: git flow feature [list] [-v]"
 	echo "       git flow feature start [-F] <name> [<base>]"
 	echo "       git flow feature finish [-rFkDS] [<name|nameprefix>]"
-	echo "       git flow feature publish <name>"
-	echo "       git flow feature track <name>"
-	echo "       git flow feature diff [<name|nameprefix>]"
-	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
-	echo "       git flow feature checkout [<name|nameprefix>]"
 	echo "       git flow feature pull [-r] <remote> [<name>]"
 }
 
@@ -68,9 +63,9 @@ cmd_list() {
 	local short_names
 	feature_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
 	if [ -z "$feature_branches" ]; then
-		warn "No feature branches exist."
+		warn "Não existe branchs de Features."
 		warn ""
-		warn "You can start a new feature branch:"
+		warn "Você pode iniciar uma nova Feature utilizando o comando:"
 		warn ""
 		warn "    git flow feature start <name> [<base>]"
 		warn ""
@@ -102,11 +97,11 @@ cmd_list() {
 		if flag verbose; then
 			printf "%-${width}s" "$branch"
 			if [ "$branch_sha" = "$develop_sha" ]; then
-				printf "(no commits yet)"
+				printf "(sem commits)"
 			elif [ "$base" = "$branch_sha" ]; then
-				printf "(is behind develop, may ff)"
+				printf "(desatualizada com desenvolvimento)"
 			elif [ "$base" = "$develop_sha" ]; then
-				printf "(based on latest develop)"
+				printf "(atualizada com desenvolvimento)"
 			else
 				printf "(may be rebased)"
 			fi
@@ -213,21 +208,32 @@ cmd_start() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
+	# Antes de criar a branch, iremos atualizar a branch local de desenvolvimento
+	git_do pull
+	
 	# create branch
 	if ! git_do checkout -b "$BRANCH" "$BASE"; then
 		die "Could not create feature branch '$BRANCH'"
 	fi
 
 	echo
-	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
-	echo "- You are now on branch '$BRANCH'"
+	echo "Ações:"
+	echo "- Branch '$BRANCH' foi criada, baseada na '$BASE'"
+	echo "- Você está na em '$BRANCH'"
 	echo ""
-	echo "Now, start committing on your feature. When done, use:"
+	echo "Bora trabalha comitando, quando finalizar utilize o comando:"
 	echo ""
 	echo "     git flow feature finish $NAME"
 	echo
 }
+
+cmd_teste(){
+	echo "Nome: $NAME"
+	echo "Origin: $ORIGIN"
+	echo "Branch: $BRANCH"
+	echo "Nome: $DEVELOP_BRANCH"
+}
+
 
 cmd_finish() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
@@ -270,11 +276,10 @@ cmd_finish() {
 			fi
 		else
 			echo
-			echo "Merge conflicts not resolved yet, use:"
-			echo "    git mergetool"
-			echo "    git commit"
+			echo
+			echo "Houve conflitos com a desenvolvimento. Para resolver o conflito utilize a ferramenta de sua preferência."
 			echo 
-			echo "You can then complete the finish by running it again:"
+			echo "Após resolver os conflitos, utilize o comando:"
 			echo "    git flow feature finish $NAME"
 			echo
 			exit 1
@@ -330,11 +335,9 @@ cmd_finish() {
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
 		echo "$DEVELOP_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 		echo
-		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
-		echo "    git mergetool"
-		echo "    git commit"
+		echo "Houve conflitos com a desenvolvimento. Para resolver o conflito utilize a ferramenta de sua preferência."
 		echo 
-		echo "You can then complete the finish by running it again:"
+		echo "Após resolver os conflitos, utilize o comando:"
 		echo "    git flow feature finish $NAME"
 		echo
 		exit 1
@@ -362,17 +365,20 @@ helper_finish_cleanup() {
 			git_do branch -d "$BRANCH"
 		fi
 	fi
+	
+	git_do push
 
 	echo
-	echo "Summary of actions:"
-	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
+	echo "Ações:"
+	echo "- Realizado merge entre '$BRANCH' e '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if flag keep; then
 		echo "- Feature branch '$BRANCH' is still available"
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		echo "- Branch de Feature '$BRANCH' foi removida"
 	fi
-	echo "- You are now on branch '$DEVELOP_BRANCH'"
+	echo "- Branch '$DEVELOP_BRANCH' enviada ao repositorio do GitHub" 
+	echo "- Você está na branch '$DEVELOP_BRANCH'"
 	echo
 }
 

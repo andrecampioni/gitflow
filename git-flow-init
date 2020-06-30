@@ -48,7 +48,7 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
-	warn "::.. Git Flow FITCARD ..::"
+	echo "::.. Git Flow FITCARD ..::"
 	
 	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
 	DEFINE_boolean defaults false 'use default branch naming conventions' d

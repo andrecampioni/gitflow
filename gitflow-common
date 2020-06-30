@@ -171,8 +171,8 @@ gitflow_has_master_configured() {
 }
 
 gitflow_has_develop_configured() {
-	local develop=$(git config --get gitflow.branch.desenvolvimento)
-	[ "$develop" != "" ] && git_local_branch_exists "$desenvolvimento"
+	local desenvolvimento=$(git config --get gitflow.branch.desenvolvimento)
+	[ "$desenvolvimento" != "" ] && git_local_branch_exists "$desenvolvimento"
 }
 
 gitflow_has_homolog_configured() {
@@ -189,14 +189,12 @@ gitflow_has_prefixes_configured() {
 }
 
 gitflow_is_initialized() {
-	gitflow_has_master_configured                    && \
-	gitflow_has_develop_configured                   && \
-	[ "$(git config --get gitflow.branch.master)" !=    \
-	  "$(git config --get gitflow.branch.desenvolvimento)" ] && \
-	[ "$(git config --get gitflow.branch.homologacao)" !=    \
-	  "$(git config --get gitflow.branch.desenvolvimento)" ] && \
-	[ "$(git config --get gitflow.branch.homologacao)" !=    \
-	  "$(git config --get gitflow.branch.master)" ] && \
+	gitflow_has_master_configured && \
+	gitflow_has_develop_configured && \
+	gitflow_has_homolog_configured && \
+	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.desenvolvimento)" ] && \
+	[ "$(git config --get gitflow.branch.homologacao)" != "$(git config --get gitflow.branch.desenvolvimento)" ] && \
+	[ "$(git config --get gitflow.branch.homologacao)" != "$(git config --get gitflow.branch.master)" ] && \
 	gitflow_has_prefixes_configured
 }
 
